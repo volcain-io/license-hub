@@ -8,6 +8,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import LicensesPage from "./pages/LicensesPage";
 import ActivationsPage from "./pages/ActivationsPage";
+import LicenseDetailPage from "./pages/LicenseDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
