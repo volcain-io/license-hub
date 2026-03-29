@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useStoreData } from '@/hooks/use-store-sync';
 import * as store from '@/lib/store';
 import type { License, LicenseStatus } from '@/lib/types';
