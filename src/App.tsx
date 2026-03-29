@@ -8,6 +8,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ProductsPage from "./pages/ProductsPage";
 import LicensesPage from "./pages/LicensesPage";
 import ActivationsPage from "./pages/ActivationsPage";
+import LicenseDetailPage from "./pages/LicenseDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/" element={<DashboardPage />} />
             <Route path="/products" element={<ProductsPage />} />
             <Route path="/licenses" element={<LicensesPage />} />
+            <Route path="/licenses/:id" element={<LicenseDetailPage />} />
             <Route path="/activations" element={<ActivationsPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
