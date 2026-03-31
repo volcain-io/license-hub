@@ -40,8 +40,13 @@ let nextId = 100;
 const genId = () => String(nextId++);
 const now = () => new Date().toISOString();
 
+// Init snapshots
+productSnap = [...products];
+licenseSnap = [...licenses];
+activationSnap = [...activations];
+
 // Products
-export const getProducts = () => [...products];
+export const getProducts = () => productSnap;
 export const getProduct = (id: string) => products.find(p => p.id === id);
 export const createProduct = (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
   const p: Product = { ...data, id: genId(), createdAt: now(), updatedAt: now() };
