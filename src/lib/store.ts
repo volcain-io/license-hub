@@ -58,7 +58,7 @@ export const updateProduct = (id: string, data: Partial<Product>) => {
 export const deleteProduct = (id: string) => { products = products.filter(p => p.id !== id); notify(); };
 
 // Licenses
-export const getLicenses = () => [...licenses];
+export const getLicenses = () => licenseSnap;
 export const getLicense = (id: string) => licenses.find(l => l.id === id);
 export const getLicensesByProduct = (productId: string) => licenses.filter(l => l.productId === productId);
 export const createLicense = (data: Omit<License, 'id' | 'createdAt' | 'updatedAt'>) => {
