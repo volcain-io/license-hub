@@ -3,7 +3,15 @@ import { Product, License, Activation } from './types';
 // Simple in-memory store with event-based reactivity
 type Listener = () => void;
 const listeners = new Set<Listener>();
-function notify() { listeners.forEach(fn => fn()); }
+let productSnap: Product[] = [];
+let licenseSnap: License[] = [];
+let activationSnap: Activation[] = [];
+function notify() {
+  productSnap = [...products];
+  licenseSnap = [...licenses];
+  activationSnap = [...activations];
+  listeners.forEach(fn => fn());
+}
 export function subscribe(fn: Listener) { listeners.add(fn); return () => listeners.delete(fn); }
 
 let products: Product[] = [
