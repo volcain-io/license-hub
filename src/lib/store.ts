@@ -71,7 +71,7 @@ export const updateLicense = (id: string, data: Partial<License>) => {
 export const deleteLicense = (id: string) => { licenses = licenses.filter(l => l.id !== id); notify(); };
 
 // Activations
-export const getActivations = () => [...activations];
+export const getActivations = () => activationSnap;
 export const getActivationsByLicense = (licenseId: string) => activations.filter(a => a.licenseId === licenseId);
 export const createActivation = (data: Omit<Activation, 'id'>) => {
   const a: Activation = { ...data, id: genId() };
