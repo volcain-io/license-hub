@@ -3,7 +3,15 @@ import { Product, License, Activation } from './types';
 // Simple in-memory store with event-based reactivity
 type Listener = () => void;
 const listeners = new Set<Listener>();
-function notify() { listeners.forEach(fn => fn()); }
+let productSnap: Product[] = [];
+let licenseSnap: License[] = [];
+let activationSnap: Activation[] = [];
+function notify() {
+  productSnap = [...products];
+  licenseSnap = [...licenses];
+  activationSnap = [...activations];
+  listeners.forEach(fn => fn());
+}
 export function subscribe(fn: Listener) { listeners.add(fn); return () => listeners.delete(fn); }
 
 let products: Product[] = [
@@ -32,8 +40,13 @@ let nextId = 100;
 const genId = () => String(nextId++);
 const now = () => new Date().toISOString();
 
+// Init snapshots
+productSnap = [...products];
+licenseSnap = [...licenses];
+activationSnap = [...activations];
+
 // Products
-export const getProducts = () => [...products];
+export const getProducts = () => productSnap;
 export const getProduct = (id: string) => products.find(p => p.id === id);
 export const createProduct = (data: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
   const p: Product = { ...data, id: genId(), createdAt: now(), updatedAt: now() };
@@ -45,7 +58,7 @@ export const updateProduct = (id: string, data: Partial<Product>) => {
 export const deleteProduct = (id: string) => { products = products.filter(p => p.id !== id); notify(); };
 
 // Licenses
-export const getLicenses = () => [...licenses];
+export const getLicenses = () => licenseSnap;
 export const getLicense = (id: string) => licenses.find(l => l.id === id);
 export const getLicensesByProduct = (productId: string) => licenses.filter(l => l.productId === productId);
 export const createLicense = (data: Omit<License, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -58,7 +71,7 @@ export const updateLicense = (id: string, data: Partial<License>) => {
 export const deleteLicense = (id: string) => { licenses = licenses.filter(l => l.id !== id); notify(); };
 
 // Activations
-export const getActivations = () => [...activations];
+export const getActivations = () => activationSnap;
 export const getActivationsByLicense = (licenseId: string) => activations.filter(a => a.licenseId === licenseId);
 export const createActivation = (data: Omit<Activation, 'id'>) => {
   const a: Activation = { ...data, id: genId() };
