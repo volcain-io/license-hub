@@ -1,25 +1,27 @@
 import { useStoreData } from '@/hooks/use-store-sync';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/PageHeader';
-import { Package, Key, Monitor, AlertTriangle } from 'lucide-react';
+import { Package, Key, Monitor, AlertTriangle, Shield } from 'lucide-react';
 
 export default function DashboardPage() {
-  const { products, licenses, activations } = useStoreData();
+  const { products, licenses, grants, activations } = useStoreData();
   const activeLicenses = licenses.filter(l => l.status === 'active').length;
   const expiredLicenses = licenses.filter(l => l.status === 'expired' || l.status === 'suspended').length;
+  const activeGrants = grants.filter(g => g.status === 'active').length;
   const activeActivations = activations.filter(a => a.isActive).length;
 
   const stats = [
     { title: 'Products', value: products.length, icon: Package, color: 'text-primary' },
     { title: 'Active Licenses', value: activeLicenses, icon: Key, color: 'text-success' },
-    { title: 'Needs Attention', value: expiredLicenses, icon: AlertTriangle, color: 'text-warning' },
+    { title: 'Active Grants', value: activeGrants, icon: Shield, color: 'text-primary' },
     { title: 'Active Devices', value: activeActivations, icon: Monitor, color: 'text-primary' },
+    { title: 'Needs Attention', value: expiredLicenses, icon: AlertTriangle, color: 'text-warning' },
   ];
 
   return (
     <>
       <PageHeader title="Dashboard" description="License management overview" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {stats.map(s => (
           <Card key={s.title}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
