@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useStoreData } from '@/hooks/use-store-sync';
 import { usePagination } from '@/hooks/use-pagination';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -16,18 +17,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, Power, PowerOff } from 'lucide-react';
+import { Plus, Trash2, Power, PowerOff, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 export default function ActivationsPage() {
-  const { licenses, activations, products } = useStoreData();
+  const { licenses, activations, products, grants } = useStoreData();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Activation | null>(null);
   const [filterLicense, setFilterLicense] = useState<string>('all');
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState({ licenseId: '', deviceName: '', deviceFingerprint: '', ipAddress: '' });
+  const [form, setForm] = useState({ grantId: '', deviceName: '', deviceFingerprint: '', ipAddress: '' });
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -47,14 +48,15 @@ export default function ActivationsPage() {
   });
 
   const openCreate = () => {
-    setForm({ licenseId: licenses[0]?.id || '', deviceName: '', deviceFingerprint: '', ipAddress: '' });
+    setForm({ grantId: grants[0]?.id || '', deviceName: '', deviceFingerprint: '', ipAddress: '' });
     setDialogOpen(true);
   };
 
   const handleSave = () => {
-    if (!form.licenseId || !form.deviceName.trim()) { toast.error('License and device name are required'); return; }
-    const now = new Date().toISOString();
-    store.createActivation({ ...form, activatedAt: now, lastSeenAt: now, isActive: true });
+    if (!form.grantId || !form.deviceName.trim()) { toast.error('Grant and device name are required'); return; }
+    const grant = grants.find(g => g.id === form.grantId);
+    const ts = new Date().toISOString();
+    store.createActivation({ ...form, licenseId: grant?.licenseId || '', activatedAt: ts, lastSeenAt: ts, isActive: true });
     toast.success('Activation created');
     setDialogOpen(false);
   };
@@ -66,16 +68,21 @@ export default function ActivationsPage() {
 
   const handleDelete = () => { if (deleteTarget) { store.deleteActivation(deleteTarget.id); toast.success('Activation removed'); } setDeleteTarget(null); };
 
+  const grantLabel = (grantId: string) => {
+    const g = grants.find(gr => gr.id === grantId);
+    return g ? `${g.name} (${g.featureCode})` : 'Unknown';
+  };
+
   const licenseLabel = (id: string) => {
     const l = licenses.find(li => li.id === id);
     if (!l) return 'Unknown';
     const p = products.find(pr => pr.id === l.productId);
-    return `${l.licenseKey.slice(0, 16)}… — ${p?.name || ''}`;
+    return `${l.customerName} — ${p?.name || ''}`;
   };
 
   return (
     <>
-      <PageHeader title="Activations" description="Track device activations across all licenses" actions={
+      <PageHeader title="Activations" description="Track device activations across all licenses and grants" actions={
         <Button onClick={openCreate} size="sm"><Plus className="h-4 w-4 mr-1" /> Add Activation</Button>
       } />
 
@@ -96,12 +103,12 @@ export default function ActivationsPage() {
             <TableHeader>
               <TableRow>
                 <SortableHeader label="Device" active={sort?.key === 'deviceName'} direction={sort?.key === 'deviceName' ? sort.direction : undefined} onClick={() => toggleSort('deviceName')} />
+                <TableHead>Grant</TableHead>
                 <TableHead>License</TableHead>
                 <SortableHeader label="IP Address" active={sort?.key === 'ipAddress'} direction={sort?.key === 'ipAddress' ? sort.direction : undefined} onClick={() => toggleSort('ipAddress')} />
                 <SortableHeader label="Activated" active={sort?.key === 'activatedAt'} direction={sort?.key === 'activatedAt' ? sort.direction : undefined} onClick={() => toggleSort('activatedAt')} />
-                <SortableHeader label="Last Seen" active={sort?.key === 'lastSeenAt'} direction={sort?.key === 'lastSeenAt' ? sort.direction : undefined} onClick={() => toggleSort('lastSeenAt')} />
                 <SortableHeader label="Status" active={sort?.key === 'isActive'} direction={sort?.key === 'isActive' ? sort.direction : undefined} onClick={() => toggleSort('isActive')} />
-                <TableHead className="w-24" />
+                <TableHead className="w-28" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -111,10 +118,10 @@ export default function ActivationsPage() {
                     <div className="font-medium text-sm">{a.deviceName}</div>
                     <div className="text-xs text-muted-foreground font-mono">{a.deviceFingerprint}</div>
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-48 truncate">{licenseLabel(a.licenseId)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-40 truncate">{grantLabel(a.grantId)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-40 truncate">{licenseLabel(a.licenseId)}</TableCell>
                   <TableCell className="font-mono text-xs">{a.ipAddress}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{format(new Date(a.activatedAt), 'MMM d, yyyy')}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{format(new Date(a.lastSeenAt), 'MMM d, yyyy')}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={cn('text-xs', a.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-muted text-muted-foreground')}>
                       {a.isActive ? 'Active' : 'Inactive'}
@@ -122,6 +129,7 @@ export default function ActivationsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" asChild><Link to={`/activations/${a.id}`}><Eye className="h-4 w-4" /></Link></Button>
                       <Button variant="ghost" size="icon" onClick={() => toggleActive(a)} title={a.isActive ? 'Deactivate' : 'Reactivate'}>
                         {a.isActive ? <PowerOff className="h-4 w-4 text-warning" /> : <Power className="h-4 w-4 text-success" />}
                       </Button>
@@ -143,10 +151,13 @@ export default function ActivationsPage() {
         <DialogContent>
           <DialogHeader><DialogTitle>New Activation</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>License</Label>
-              <Select value={form.licenseId} onValueChange={v => setForm(f => ({ ...f, licenseId: v }))}>
+            <div><Label>Grant</Label>
+              <Select value={form.grantId} onValueChange={v => setForm(f => ({ ...f, grantId: v }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{licenses.map(l => <SelectItem key={l.id} value={l.id}>{l.licenseKey} — {l.customerName}</SelectItem>)}</SelectContent>
+                <SelectContent>{grants.map(g => {
+                  const l = licenses.find(li => li.id === g.licenseId);
+                  return <SelectItem key={g.id} value={g.id}>{g.name} — {l?.customerName || 'Unknown'}</SelectItem>;
+                })}</SelectContent>
               </Select>
             </div>
             <div><Label>Device Name</Label><Input value={form.deviceName} onChange={e => setForm(f => ({ ...f, deviceName: e.target.value }))} /></div>

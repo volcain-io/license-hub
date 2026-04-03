@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Package, Key, Monitor, LayoutDashboard } from 'lucide-react';
+import { Package, Key, Monitor, LayoutDashboard, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [

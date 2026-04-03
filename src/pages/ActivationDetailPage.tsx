@@ -1,0 +1,214 @@
+import { useParams, Link } from 'react-router-dom';
+import { useStoreData } from '@/hooks/use-store-sync';
+import { getAuditLogsByLicense } from '@/lib/audit-store';
+import PageHeader from '@/components/PageHeader';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Monitor, Shield, Clock, Globe, Hash, FileText } from 'lucide-react';
+import { format, formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
+
+const resultColors: Record<string, string> = {
+  approved: 'bg-success/15 text-success border-success/30',
+  denied: 'bg-destructive/15 text-destructive border-destructive/30',
+  error: 'bg-warning/15 text-warning border-warning/30',
+};
+
+const stateColors: Record<string, string> = {
+  activated: 'bg-success/15 text-success border-success/30',
+  reactivated: 'bg-success/15 text-success border-success/30',
+  deactivated: 'bg-muted text-muted-foreground',
+  suspended: 'bg-warning/15 text-warning border-warning/30',
+  revoked: 'bg-destructive/15 text-destructive border-destructive/30',
+  expired: 'bg-muted text-muted-foreground',
+};
+
+export default function ActivationDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const { activations, grants, licenses, products, responseLogs, historyLogs } = useStoreData();
+
+  const activation = activations.find(a => a.id === id);
+  if (!activation) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <p className="text-lg mb-4">Activation not found</p>
+        <Button variant="outline" asChild><Link to="/activations"><ArrowLeft className="h-4 w-4 mr-1" /> Back to Activations</Link></Button>
+      </div>
+    );
+  }
+
+  const grant = grants.find(g => g.id === activation.grantId);
+  const license = licenses.find(l => l.id === activation.licenseId);
+  const product = license ? products.find(p => p.id === license.productId) : null;
+
+  const actResponseLogs = responseLogs.filter(r => r.activationId === activation.id).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  const actHistoryLogs = historyLogs.filter(h => h.activationId === activation.id).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  const auditLog = license ? getAuditLogsByLicense(license.id).filter(e => e.details.toLowerCase().includes(activation.deviceName.toLowerCase())) : [];
+
+  return (
+    <>
+      <div className="mb-4">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/activations"><ArrowLeft className="h-4 w-4 mr-1" /> Back to Activations</Link>
+        </Button>
+      </div>
+
+      <PageHeader
+        title={activation.deviceName}
+        description="Activation detail — response logs, history & audit trail"
+        actions={
+          <Badge variant="outline" className={cn('text-xs', activation.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-muted text-muted-foreground')}>
+            {activation.isActive ? 'Active' : 'Inactive'}
+          </Badge>
+        }
+      />
+
+      {/* Info Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-muted-foreground">Device Information</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow icon={Monitor} label="Device">{activation.deviceName}</InfoRow>
+            <InfoRow icon={Hash} label="Fingerprint"><span className="font-mono text-xs">{activation.deviceFingerprint}</span></InfoRow>
+            <InfoRow icon={Globe} label="IP Address"><span className="font-mono text-xs">{activation.ipAddress}</span></InfoRow>
+            <InfoRow icon={Clock} label="Activated">{format(new Date(activation.activatedAt), 'MMM d, yyyy HH:mm')}</InfoRow>
+            <InfoRow icon={Clock} label="Last Seen">
+              {format(new Date(activation.lastSeenAt), 'MMM d, yyyy')}
+              <span className="text-xs text-muted-foreground ml-1">({formatDistanceToNow(new Date(activation.lastSeenAt), { addSuffix: true })})</span>
+            </InfoRow>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-muted-foreground">Grant & License</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow icon={Shield} label="Grant">{grant?.name || 'Unknown'}</InfoRow>
+            <InfoRow icon={FileText} label="Feature"><span className="font-mono text-xs">{grant?.featureCode || '—'}</span></InfoRow>
+            <InfoRow icon={FileText} label="License">
+              {license ? <Link to={`/licenses/${license.id}`} className="text-primary hover:underline text-xs font-mono">{license.licenseKey}</Link> : 'Unknown'}
+            </InfoRow>
+            <InfoRow icon={FileText} label="Customer">{license?.customerName || '—'}</InfoRow>
+            <InfoRow icon={FileText} label="Product">{product?.name || '—'}</InfoRow>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs for logs */}
+      <Tabs defaultValue="response" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="response">Response Logs ({actResponseLogs.length})</TabsTrigger>
+          <TabsTrigger value="history">History ({actHistoryLogs.length})</TabsTrigger>
+          <TabsTrigger value="audit">Audit Log ({auditLog.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="response">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Result</TableHead>
+                    <TableHead>Reason Code</TableHead>
+                    <TableHead>Details</TableHead>
+                    <TableHead>Timestamp</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {actResponseLogs.map(r => (
+                    <TableRow key={r.id}>
+                      <TableCell>
+                        <Badge variant="outline" className={cn('text-xs', resultColors[r.result] || '')}>{r.result}</Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{r.reasonCode}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-md">{r.details}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{format(new Date(r.timestamp), 'MMM d, yyyy HH:mm:ss')}</TableCell>
+                    </TableRow>
+                  ))}
+                  {actResponseLogs.length === 0 && (
+                    <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">No response logs</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Transition</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead>Performed By</TableHead>
+                    <TableHead>Timestamp</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {actHistoryLogs.map(h => (
+                    <TableRow key={h.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          {h.fromState && <span className="text-xs text-muted-foreground">{h.fromState}</span>}
+                          {h.fromState && <span className="text-xs text-muted-foreground">→</span>}
+                          <Badge variant="outline" className={cn('text-xs', stateColors[h.toState] || '')}>{h.toState}</Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm">{h.reason}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{h.performedBy}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{format(new Date(h.timestamp), 'MMM d, yyyy HH:mm')}</TableCell>
+                    </TableRow>
+                  ))}
+                  {actHistoryLogs.length === 0 && (
+                    <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground">No history logs</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="audit">
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border">
+                {auditLog.map(entry => (
+                  <div key={entry.id} className="flex items-start gap-3 px-4 py-3">
+                    <span className="text-lg mt-0.5">📋</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm">{entry.details}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-muted-foreground">{format(new Date(entry.timestamp), 'MMM d, yyyy HH:mm')}</span>
+                        <Separator orientation="vertical" className="h-3" />
+                        <span className="text-xs text-muted-foreground">{entry.performedBy}</span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-mono">{entry.action}</Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {auditLog.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground text-sm">No audit entries for this device</div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </>
+  );
+}
+
+function InfoRow({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+      <span className="text-muted-foreground w-24 shrink-0">{label}</span>
+      <div className="flex items-center">{children}</div>
+    </div>
+  );
+}
