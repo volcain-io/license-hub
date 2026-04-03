@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useStoreData } from '@/hooks/use-store-sync';
+import { usePagination } from '@/hooks/use-pagination';
+import { useDebounce } from '@/hooks/use-debounce';
 import * as store from '@/lib/store';
 import type { Activation } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import TablePagination from '@/components/TablePagination';
+import SortableHeader from '@/components/SortableHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,9 +26,25 @@ export default function ActivationsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Activation | null>(null);
   const [filterLicense, setFilterLicense] = useState<string>('all');
+  const [search, setSearch] = useState('');
   const [form, setForm] = useState({ licenseId: '', deviceName: '', deviceFingerprint: '', ipAddress: '' });
 
-  const filtered = filterLicense === 'all' ? activations : activations.filter(a => a.licenseId === filterLicense);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const filtered = useMemo(() => {
+    let result = filterLicense === 'all' ? activations : activations.filter(a => a.licenseId === filterLicense);
+    if (debouncedSearch) {
+      const s = debouncedSearch.toLowerCase();
+      result = result.filter(a => a.deviceName.toLowerCase().includes(s) || a.deviceFingerprint.toLowerCase().includes(s) || a.ipAddress.includes(s));
+    }
+    return result;
+  }, [activations, filterLicense, debouncedSearch]);
+
+  const { paginatedData, page, pageSize, totalPages, totalItems, sort, setPage, setPageSize, toggleSort } = usePagination<Activation>({
+    data: filtered,
+    defaultPageSize: 25,
+    defaultSort: { key: 'activatedAt', direction: 'desc' },
+  });
 
   const openCreate = () => {
     setForm({ licenseId: licenses[0]?.id || '', deviceName: '', deviceFingerprint: '', ipAddress: '' });
@@ -59,8 +79,9 @@ export default function ActivationsPage() {
         <Button onClick={openCreate} size="sm"><Plus className="h-4 w-4 mr-1" /> Add Activation</Button>
       } />
 
-      <div className="flex gap-3 mb-4">
-        <Select value={filterLicense} onValueChange={setFilterLicense}>
+      <div className="flex flex-wrap gap-3 mb-4">
+        <Input placeholder="Search devices, IPs…" className="w-64" value={search} onChange={e => setSearch(e.target.value)} />
+        <Select value={filterLicense} onValueChange={v => { setFilterLicense(v); setPage(1); }}>
           <SelectTrigger className="w-80"><SelectValue placeholder="All Licenses" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Licenses</SelectItem>
@@ -74,17 +95,17 @@ export default function ActivationsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Device</TableHead>
+                <SortableHeader label="Device" active={sort?.key === 'deviceName'} direction={sort?.key === 'deviceName' ? sort.direction : undefined} onClick={() => toggleSort('deviceName')} />
                 <TableHead>License</TableHead>
-                <TableHead>IP Address</TableHead>
-                <TableHead>Activated</TableHead>
-                <TableHead>Last Seen</TableHead>
-                <TableHead>Status</TableHead>
+                <SortableHeader label="IP Address" active={sort?.key === 'ipAddress'} direction={sort?.key === 'ipAddress' ? sort.direction : undefined} onClick={() => toggleSort('ipAddress')} />
+                <SortableHeader label="Activated" active={sort?.key === 'activatedAt'} direction={sort?.key === 'activatedAt' ? sort.direction : undefined} onClick={() => toggleSort('activatedAt')} />
+                <SortableHeader label="Last Seen" active={sort?.key === 'lastSeenAt'} direction={sort?.key === 'lastSeenAt' ? sort.direction : undefined} onClick={() => toggleSort('lastSeenAt')} />
+                <SortableHeader label="Status" active={sort?.key === 'isActive'} direction={sort?.key === 'isActive' ? sort.direction : undefined} onClick={() => toggleSort('isActive')} />
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map(a => (
+              {paginatedData.map(a => (
                 <TableRow key={a.id}>
                   <TableCell>
                     <div className="font-medium text-sm">{a.deviceName}</div>
@@ -109,11 +130,12 @@ export default function ActivationsPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {paginatedData.length === 0 && (
                 <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No activations found</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
+          <TablePagination page={page} totalPages={totalPages} pageSize={pageSize} totalItems={activations.length} filteredCount={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
         </CardContent>
       </Card>
 

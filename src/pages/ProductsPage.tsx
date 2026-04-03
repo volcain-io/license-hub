@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useStoreData } from '@/hooks/use-store-sync';
+import { usePagination } from '@/hooks/use-pagination';
+import { useDebounce } from '@/hooks/use-debounce';
 import * as store from '@/lib/store';
 import type { Product } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import TablePagination from '@/components/TablePagination';
+import SortableHeader from '@/components/SortableHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,7 +24,22 @@ export default function ProductsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [search, setSearch] = useState('');
   const [form, setForm] = useState({ name: '', slug: '', description: '' });
+
+  const debouncedSearch = useDebounce(search, 300);
+
+  const filtered = useMemo(() => {
+    if (!debouncedSearch) return products;
+    const s = debouncedSearch.toLowerCase();
+    return products.filter(p => p.name.toLowerCase().includes(s) || p.slug.toLowerCase().includes(s));
+  }, [products, debouncedSearch]);
+
+  const { paginatedData, page, pageSize, totalPages, totalItems, sort, setPage, setPageSize, toggleSort } = usePagination<Product>({
+    data: filtered,
+    defaultPageSize: 25,
+    defaultSort: { key: 'name', direction: 'asc' },
+  });
 
   const openCreate = () => { setEditing(null); setForm({ name: '', slug: '', description: '' }); setDialogOpen(true); };
   const openEdit = (p: Product) => { setEditing(p); setForm({ name: p.name, slug: p.slug, description: p.description }); setDialogOpen(true); };
@@ -47,20 +66,25 @@ export default function ProductsPage() {
       <PageHeader title="Products" description="Manage your software product catalog" actions={
         <Button onClick={openCreate} size="sm"><Plus className="h-4 w-4 mr-1" /> Add Product</Button>
       } />
+
+      <div className="flex flex-wrap gap-3 mb-4">
+        <Input placeholder="Search products…" className="w-64" value={search} onChange={e => setSearch(e.target.value)} />
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Slug</TableHead>
+                <SortableHeader label="Name" active={sort?.key === 'name'} direction={sort?.key === 'name' ? sort.direction : undefined} onClick={() => toggleSort('name')} />
+                <SortableHeader label="Slug" active={sort?.key === 'slug'} direction={sort?.key === 'slug' ? sort.direction : undefined} onClick={() => toggleSort('slug')} />
                 <TableHead>Licenses</TableHead>
-                <TableHead>Created</TableHead>
+                <SortableHeader label="Created" active={sort?.key === 'createdAt'} direction={sort?.key === 'createdAt' ? sort.direction : undefined} onClick={() => toggleSort('createdAt')} />
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {products.map(p => (
+              {paginatedData.map(p => (
                 <TableRow key={p.id}>
                   <TableCell className="font-medium">{p.name}</TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">{p.slug}</TableCell>
@@ -74,11 +98,12 @@ export default function ProductsPage() {
                   </TableCell>
                 </TableRow>
               ))}
-              {products.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No products yet</TableCell></TableRow>
+              {paginatedData.length === 0 && (
+                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">No products found</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
+          <TablePagination page={page} totalPages={totalPages} pageSize={pageSize} totalItems={products.length} filteredCount={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
         </CardContent>
       </Card>
 

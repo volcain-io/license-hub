@@ -1,11 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useStoreData } from '@/hooks/use-store-sync';
+import { usePagination } from '@/hooks/use-pagination';
+import { useDebounce } from '@/hooks/use-debounce';
 import * as store from '@/lib/store';
 import type { License, LicenseStatus } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
 import StatusBadge from '@/components/StatusBadge';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import TablePagination from '@/components/TablePagination';
+import SortableHeader from '@/components/SortableHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -19,7 +23,6 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 const genKey = (prefix: string) => `${prefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-
 const defaultForm = { licenseKey: '', productId: '', customerName: '', customerEmail: '', status: 'active' as LicenseStatus, maxActivations: 1, expiresAt: '', notes: '' };
 
 export default function LicensesPage() {
@@ -32,14 +35,24 @@ export default function LicensesPage() {
   const [search, setSearch] = useState('');
   const [form, setForm] = useState(defaultForm);
 
-  const filtered = licenses.filter(l => {
-    if (filterProduct !== 'all' && l.productId !== filterProduct) return false;
-    if (filterStatus !== 'all' && l.status !== filterStatus) return false;
-    if (search) {
-      const s = search.toLowerCase();
-      return l.licenseKey.toLowerCase().includes(s) || l.customerName.toLowerCase().includes(s) || l.customerEmail.toLowerCase().includes(s);
-    }
-    return true;
+  const debouncedSearch = useDebounce(search, 300);
+
+  const filtered = useMemo(() => {
+    return licenses.filter(l => {
+      if (filterProduct !== 'all' && l.productId !== filterProduct) return false;
+      if (filterStatus !== 'all' && l.status !== filterStatus) return false;
+      if (debouncedSearch) {
+        const s = debouncedSearch.toLowerCase();
+        return l.licenseKey.toLowerCase().includes(s) || l.customerName.toLowerCase().includes(s) || l.customerEmail.toLowerCase().includes(s);
+      }
+      return true;
+    });
+  }, [licenses, filterProduct, filterStatus, debouncedSearch]);
+
+  const { paginatedData, page, pageSize, totalPages, totalItems, sort, setPage, setPageSize, toggleSort } = usePagination<License>({
+    data: filtered,
+    defaultPageSize: 25,
+    defaultSort: { key: 'createdAt', direction: 'desc' },
   });
 
   const openCreate = () => {
@@ -80,14 +93,14 @@ export default function LicensesPage() {
 
       <div className="flex flex-wrap gap-3 mb-4">
         <Input placeholder="Search keys, customers…" className="w-64" value={search} onChange={e => setSearch(e.target.value)} />
-        <Select value={filterProduct} onValueChange={setFilterProduct}>
+        <Select value={filterProduct} onValueChange={v => { setFilterProduct(v); setPage(1); }}>
           <SelectTrigger className="w-44"><SelectValue placeholder="All Products" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Products</SelectItem>
             {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
           </SelectContent>
         </Select>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
+        <Select value={filterStatus} onValueChange={v => { setFilterStatus(v); setPage(1); }}>
           <SelectTrigger className="w-36"><SelectValue placeholder="All Statuses" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
@@ -104,17 +117,17 @@ export default function LicensesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>License Key</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Status</TableHead>
+                <SortableHeader label="License Key" active={sort?.key === 'licenseKey'} direction={sort?.key === 'licenseKey' ? sort.direction : undefined} onClick={() => toggleSort('licenseKey')} />
+                <SortableHeader label="Product" active={sort?.key === 'productId'} direction={sort?.key === 'productId' ? sort.direction : undefined} onClick={() => toggleSort('productId')} />
+                <SortableHeader label="Customer" active={sort?.key === 'customerName'} direction={sort?.key === 'customerName' ? sort.direction : undefined} onClick={() => toggleSort('customerName')} />
+                <SortableHeader label="Status" active={sort?.key === 'status'} direction={sort?.key === 'status' ? sort.direction : undefined} onClick={() => toggleSort('status')} />
                 <TableHead>Activations</TableHead>
-                <TableHead>Expires</TableHead>
+                <SortableHeader label="Expires" active={sort?.key === 'expiresAt'} direction={sort?.key === 'expiresAt' ? sort.direction : undefined} onClick={() => toggleSort('expiresAt')} />
                 <TableHead className="w-24" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map(l => {
+              {paginatedData.map(l => {
                 const usedActivations = activations.filter(a => a.licenseId === l.id && a.isActive).length;
                 return (
                   <TableRow key={l.id}>
@@ -141,11 +154,12 @@ export default function LicensesPage() {
                   </TableRow>
                 );
               })}
-              {filtered.length === 0 && (
+              {paginatedData.length === 0 && (
                 <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No licenses found</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
+          <TablePagination page={page} totalPages={totalPages} pageSize={pageSize} totalItems={licenses.length} filteredCount={filtered.length} onPageChange={setPage} onPageSizeChange={setPageSize} />
         </CardContent>
       </Card>
 
