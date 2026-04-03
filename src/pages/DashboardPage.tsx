@@ -27,7 +27,7 @@ export default function DashboardPage() {
               <s.icon className={`h-4 w-4 ${s.color}`} />
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">{s.value}</div>
+              <div className="text-3xl font-bold">{s.value.toLocaleString()}</div>
             </CardContent>
           </Card>
         ))}
