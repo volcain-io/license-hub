@@ -23,8 +23,26 @@ export interface License {
   updatedAt: string;
 }
 
+export type GrantStatus = 'active' | 'expired' | 'revoked';
+
+export interface Grant {
+  id: string;
+  licenseId: string;
+  name: string;
+  featureCode: string;
+  status: GrantStatus;
+  maxActivations: number;
+  startsAt: string;
+  expiresAt: string | null;
+  metadata: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Activation {
   id: string;
+  grantId: string;
+  /** Denormalized for convenience — derived from grant.licenseId */
   licenseId: string;
   deviceName: string;
   deviceFingerprint: string;
@@ -32,4 +50,33 @@ export interface Activation {
   activatedAt: string;
   lastSeenAt: string;
   isActive: boolean;
+}
+
+export type ValidationResult = 'approved' | 'denied' | 'error';
+
+export interface ResponseLog {
+  id: string;
+  activationId: string;
+  result: ValidationResult;
+  reasonCode: string;
+  details: string;
+  timestamp: string;
+}
+
+export type StateTransition =
+  | 'activated'
+  | 'deactivated'
+  | 'reactivated'
+  | 'suspended'
+  | 'revoked'
+  | 'expired';
+
+export interface HistoryLog {
+  id: string;
+  activationId: string;
+  fromState: string;
+  toState: StateTransition;
+  reason: string;
+  performedBy: string;
+  timestamp: string;
 }
