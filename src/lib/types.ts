@@ -39,16 +39,28 @@ export interface Grant {
   updatedAt: string;
 }
 
+export type ActivationType = 'online' | 'offline' | 'hybrid';
+export type ProductActivationState = 'activated' | 'deactivated' | 'pending' | 'error';
+export type InstallationType = 'standalone' | 'network' | 'container' | 'cloud' | 'embedded';
+
 export interface Activation {
   id: string;
   grantId: string;
   /** Denormalized for convenience — derived from grant.licenseId */
   licenseId: string;
+  systemId: string;
+  installationType: InstallationType;
+  productFamily: string;
   deviceName: string;
   deviceFingerprint: string;
   ipAddress: string;
   activatedAt: string;
+  lastActivationCall: string;
+  lastProductActivationState: ProductActivationState;
   lastSeenAt: string;
+  interval: number; // heartbeat interval in minutes
+  activationType: ActivationType;
+  productVersion: string;
   isActive: boolean;
 }
 
