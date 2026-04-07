@@ -195,8 +195,34 @@ export default function ActivationsPage() {
               </Select>
             </div>
             <div><Label>Device Name</Label><Input value={form.deviceName} onChange={e => setForm(f => ({ ...f, deviceName: e.target.value }))} /></div>
+            <div><Label>System ID</Label><Input value={form.systemId} onChange={e => setForm(f => ({ ...f, systemId: e.target.value }))} placeholder="Auto-generated if empty" className="font-mono" /></div>
             <div><Label>Device Fingerprint</Label><Input value={form.deviceFingerprint} onChange={e => setForm(f => ({ ...f, deviceFingerprint: e.target.value }))} className="font-mono" /></div>
             <div><Label>IP Address</Label><Input value={form.ipAddress} onChange={e => setForm(f => ({ ...f, ipAddress: e.target.value }))} className="font-mono" /></div>
+            <div><Label>Product Version</Label><Input value={form.productVersion} onChange={e => setForm(f => ({ ...f, productVersion: e.target.value }))} className="font-mono" /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Installation Type</Label>
+                <Select value={form.installationType} onValueChange={v => setForm(f => ({ ...f, installationType: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standalone">Standalone</SelectItem>
+                    <SelectItem value="network">Network</SelectItem>
+                    <SelectItem value="container">Container</SelectItem>
+                    <SelectItem value="cloud">Cloud</SelectItem>
+                    <SelectItem value="embedded">Embedded</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div><Label>Activation Type</Label>
+                <Select value={form.activationType} onValueChange={v => setForm(f => ({ ...f, activationType: v as any }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="online">Online</SelectItem>
+                    <SelectItem value="offline">Offline</SelectItem>
+                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
           <DialogFooter><Button onClick={handleSave}>Create Activation</Button></DialogFooter>
         </DialogContent>

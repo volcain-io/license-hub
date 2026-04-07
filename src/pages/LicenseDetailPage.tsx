@@ -231,12 +231,15 @@ export default function LicenseDetailPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Device</TableHead>
+                    <TableHead>System ID</TableHead>
                     <TableHead>Grant</TableHead>
-                    <TableHead>IP Address</TableHead>
-                    <TableHead>Activated</TableHead>
-                    <TableHead>Last Seen</TableHead>
+                    <TableHead>Install Type</TableHead>
+                    <TableHead>Version</TableHead>
+                    <TableHead>Last Call</TableHead>
+                    <TableHead>Last State</TableHead>
+                    <TableHead>IP</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="w-28" />
+                    <TableHead className="w-36" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -248,13 +251,19 @@ export default function LicenseDetailPage() {
                           <div className="font-medium text-sm">{a.deviceName}</div>
                           <div className="font-mono text-xs text-muted-foreground">{a.deviceFingerprint}</div>
                         </TableCell>
+                        <TableCell className="font-mono text-xs">{a.systemId}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{grant?.name || 'Unknown'}</TableCell>
-                        <TableCell className="font-mono text-xs">{a.ipAddress}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{format(new Date(a.activatedAt), 'MMM d, yyyy HH:mm')}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {format(new Date(a.lastSeenAt), 'MMM d, yyyy')}
-                          <span className="text-xs ml-1">({formatDistanceToNow(new Date(a.lastSeenAt), { addSuffix: true })})</span>
+                        <TableCell><Badge variant="secondary" className="text-xs">{a.installationType}</Badge></TableCell>
+                        <TableCell className="font-mono text-xs">{a.productVersion}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{format(new Date(a.lastActivationCall), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={cn('text-xs',
+                            a.lastProductActivationState === 'activated' ? 'bg-success/15 text-success border-success/30' :
+                            a.lastProductActivationState === 'deactivated' ? 'bg-destructive/15 text-destructive border-destructive/30' :
+                            'bg-muted text-muted-foreground'
+                          )}>{a.lastProductActivationState}</Badge>
                         </TableCell>
+                        <TableCell className="font-mono text-xs">{a.ipAddress}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={cn('text-xs', a.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-destructive/15 text-destructive border-destructive/30')}>
                             {a.isActive ? 'Allowed' : 'Denied'}
@@ -266,6 +275,9 @@ export default function LicenseDetailPage() {
                             <Button variant="ghost" size="icon" onClick={() => toggleActive(a)} title={a.isActive ? 'Deny' : 'Allow'}>
                               {a.isActive ? <ShieldBan className="h-4 w-4 text-destructive" /> : <ShieldCheck className="h-4 w-4 text-success" />}
                             </Button>
+                            <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(a.systemId); toast.success('System ID copied'); }} title="Copy System ID">
+                              <Copy className="h-4 w-4" />
+                            </Button>
                             <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(a)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                           </div>
                         </TableCell>
@@ -273,7 +285,7 @@ export default function LicenseDetailPage() {
                     );
                   })}
                   {filteredActivations.length === 0 && (
-                    <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No activations</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No activations</TableCell></TableRow>
                   )}
                 </TableBody>
               </Table>
