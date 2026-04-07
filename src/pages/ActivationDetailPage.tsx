@@ -61,8 +61,8 @@ export default function ActivationDetailPage() {
         title={activation.deviceName}
         description="Activation detail — response logs, history & audit trail"
         actions={
-          <Badge variant="outline" className={cn('text-xs', activation.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-muted text-muted-foreground')}>
-            {activation.isActive ? 'Active' : 'Inactive'}
+          <Badge variant="outline" className={cn('text-xs', activation.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-destructive/15 text-destructive border-destructive/30')}>
+            {activation.isActive ? 'Allowed' : 'Denied'}
           </Badge>
         }
       />
