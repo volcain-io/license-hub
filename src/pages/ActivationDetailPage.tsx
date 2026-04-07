@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useStoreData } from '@/hooks/use-store-sync';
+import * as store from '@/lib/store';
 import { getAuditLogsByLicense } from '@/lib/audit-store';
 import PageHeader from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,8 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Monitor, Shield, Clock, Globe, Hash, FileText } from 'lucide-react';
+import { ArrowLeft, Monitor, Shield, Clock, Globe, Hash, FileText, ShieldCheck, ShieldBan, Copy, Cpu, Box, Timer, Zap, Tag } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 const resultColors: Record<string, string> = {
@@ -61,24 +63,50 @@ export default function ActivationDetailPage() {
         title={activation.deviceName}
         description="Activation detail — response logs, history & audit trail"
         actions={
-          <Badge variant="outline" className={cn('text-xs', activation.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-destructive/15 text-destructive border-destructive/30')}>
-            {activation.isActive ? 'Allowed' : 'Denied'}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => { store.updateActivation(activation.id, { isActive: !activation.isActive }); toast.success(activation.isActive ? 'Denied' : 'Allowed'); }}>
+              {activation.isActive ? <><ShieldBan className="h-4 w-4 mr-1" /> Deny</> : <><ShieldCheck className="h-4 w-4 mr-1" /> Allow</>}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(activation.systemId); toast.success('System ID copied'); }}>
+              <Copy className="h-4 w-4 mr-1" /> Copy System ID
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(`DEV-${activation.systemId}-${activation.deviceFingerprint}`); toast.success('Developer Info System ID copied'); }}>
+              <Copy className="h-4 w-4 mr-1" /> Copy Dev Info ID
+            </Button>
+            <Badge variant="outline" className={cn('text-xs', activation.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-destructive/15 text-destructive border-destructive/30')}>
+              {activation.isActive ? 'Allowed' : 'Denied'}
+            </Badge>
+          </div>
         }
       />
 
       {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-muted-foreground">Device Information</CardTitle></CardHeader>
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-muted-foreground">System Information</CardTitle></CardHeader>
           <CardContent className="space-y-3">
+            <InfoRow icon={Hash} label="System ID"><span className="font-mono text-xs">{activation.systemId}</span></InfoRow>
             <InfoRow icon={Monitor} label="Device">{activation.deviceName}</InfoRow>
             <InfoRow icon={Hash} label="Fingerprint"><span className="font-mono text-xs">{activation.deviceFingerprint}</span></InfoRow>
             <InfoRow icon={Globe} label="IP Address"><span className="font-mono text-xs">{activation.ipAddress}</span></InfoRow>
-            <InfoRow icon={Clock} label="Activated">{format(new Date(activation.activatedAt), 'MMM d, yyyy HH:mm')}</InfoRow>
-            <InfoRow icon={Clock} label="Last Seen">
-              {format(new Date(activation.lastSeenAt), 'MMM d, yyyy')}
-              <span className="text-xs text-muted-foreground ml-1">({formatDistanceToNow(new Date(activation.lastSeenAt), { addSuffix: true })})</span>
+            <InfoRow icon={Box} label="Install Type"><Badge variant="secondary" className="text-xs">{activation.installationType}</Badge></InfoRow>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-muted-foreground">Activation Details</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <InfoRow icon={Cpu} label="Product Family">{activation.productFamily}</InfoRow>
+            <InfoRow icon={Tag} label="Version"><span className="font-mono text-xs">{activation.productVersion}</span></InfoRow>
+            <InfoRow icon={Zap} label="Act. Type"><Badge variant="secondary" className="text-xs">{activation.activationType}</Badge></InfoRow>
+            <InfoRow icon={Timer} label="Interval">{activation.interval} min</InfoRow>
+            <InfoRow icon={Shield} label="Last State">
+              <Badge variant="outline" className={cn('text-xs',
+                activation.lastProductActivationState === 'activated' ? 'bg-success/15 text-success border-success/30' :
+                activation.lastProductActivationState === 'deactivated' ? 'bg-destructive/15 text-destructive border-destructive/30' :
+                activation.lastProductActivationState === 'pending' ? 'bg-warning/15 text-warning border-warning/30' :
+                'bg-muted text-muted-foreground'
+              )}>{activation.lastProductActivationState}</Badge>
             </InfoRow>
           </CardContent>
         </Card>
@@ -92,7 +120,11 @@ export default function ActivationDetailPage() {
               {license ? <Link to={`/licenses/${license.id}`} className="text-primary hover:underline text-xs font-mono">{license.licenseKey}</Link> : 'Unknown'}
             </InfoRow>
             <InfoRow icon={FileText} label="Customer">{license?.customerName || '—'}</InfoRow>
-            <InfoRow icon={FileText} label="Product">{product?.name || '—'}</InfoRow>
+            <InfoRow icon={Clock} label="Activated">{format(new Date(activation.activatedAt), 'MMM d, yyyy HH:mm')}</InfoRow>
+            <InfoRow icon={Clock} label="Last Call">
+              {format(new Date(activation.lastActivationCall), 'MMM d, yyyy HH:mm')}
+              <span className="text-xs text-muted-foreground ml-1">({formatDistanceToNow(new Date(activation.lastActivationCall), { addSuffix: true })})</span>
+            </InfoRow>
           </CardContent>
         </Card>
       </div>

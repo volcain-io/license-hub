@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, ShieldCheck, ShieldBan, Eye } from 'lucide-react';
+import { Plus, Trash2, ShieldCheck, ShieldBan, Eye, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -103,12 +103,19 @@ export default function ActivationsPage() {
             <TableHeader>
               <TableRow>
                 <SortableHeader label="Device" active={sort?.key === 'deviceName'} direction={sort?.key === 'deviceName' ? sort.direction : undefined} onClick={() => toggleSort('deviceName')} />
+                <TableHead>System ID</TableHead>
                 <TableHead>Grant</TableHead>
                 <TableHead>License</TableHead>
+                <TableHead>Install Type</TableHead>
+                <TableHead>Product Family</TableHead>
+                <SortableHeader label="Version" active={sort?.key === 'productVersion'} direction={sort?.key === 'productVersion' ? sort.direction : undefined} onClick={() => toggleSort('productVersion')} />
+                <SortableHeader label="Last Call" active={sort?.key === 'lastActivationCall'} direction={sort?.key === 'lastActivationCall' ? sort.direction : undefined} onClick={() => toggleSort('lastActivationCall')} />
+                <TableHead>Last State</TableHead>
                 <SortableHeader label="IP Address" active={sort?.key === 'ipAddress'} direction={sort?.key === 'ipAddress' ? sort.direction : undefined} onClick={() => toggleSort('ipAddress')} />
-                <SortableHeader label="Activated" active={sort?.key === 'activatedAt'} direction={sort?.key === 'activatedAt' ? sort.direction : undefined} onClick={() => toggleSort('activatedAt')} />
+                <TableHead>Interval</TableHead>
+                <TableHead>Act. Type</TableHead>
                 <SortableHeader label="Status" active={sort?.key === 'isActive'} direction={sort?.key === 'isActive' ? sort.direction : undefined} onClick={() => toggleSort('isActive')} />
-                <TableHead className="w-28" />
+                <TableHead className="w-36" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,10 +125,23 @@ export default function ActivationsPage() {
                     <div className="font-medium text-sm">{a.deviceName}</div>
                     <div className="text-xs text-muted-foreground font-mono">{a.deviceFingerprint}</div>
                   </TableCell>
+                  <TableCell className="font-mono text-xs">{a.systemId}</TableCell>
                   <TableCell className="text-xs text-muted-foreground max-w-40 truncate">{grantLabel(a.grantId)}</TableCell>
                   <TableCell className="text-xs text-muted-foreground max-w-40 truncate">{licenseLabel(a.licenseId)}</TableCell>
+                  <TableCell><Badge variant="secondary" className="text-xs">{a.installationType}</Badge></TableCell>
+                  <TableCell className="text-xs">{a.productFamily}</TableCell>
+                  <TableCell className="font-mono text-xs">{a.productVersion}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{format(new Date(a.lastActivationCall), 'MMM d, yyyy')}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={cn('text-xs',
+                      a.lastProductActivationState === 'activated' ? 'bg-success/15 text-success border-success/30' :
+                      a.lastProductActivationState === 'deactivated' ? 'bg-destructive/15 text-destructive border-destructive/30' :
+                      'bg-muted text-muted-foreground'
+                    )}>{a.lastProductActivationState}</Badge>
+                  </TableCell>
                   <TableCell className="font-mono text-xs">{a.ipAddress}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{format(new Date(a.activatedAt), 'MMM d, yyyy')}</TableCell>
+                  <TableCell className="text-xs">{a.interval}m</TableCell>
+                  <TableCell><Badge variant="secondary" className="text-xs">{a.activationType}</Badge></TableCell>
                   <TableCell>
                     <Badge variant="outline" className={cn('text-xs', a.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-destructive/15 text-destructive border-destructive/30')}>
                       {a.isActive ? 'Allowed' : 'Denied'}
@@ -133,13 +153,16 @@ export default function ActivationsPage() {
                       <Button variant="ghost" size="icon" onClick={() => toggleActive(a)} title={a.isActive ? 'Deny' : 'Allow'}>
                         {a.isActive ? <ShieldBan className="h-4 w-4 text-destructive" /> : <ShieldCheck className="h-4 w-4 text-success" />}
                       </Button>
+                      <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(a.systemId); toast.success('System ID copied'); }} title="Copy System ID">
+                        <Copy className="h-4 w-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(a)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
               {paginatedData.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No activations found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={14} className="text-center py-8 text-muted-foreground">No activations found</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
