@@ -28,7 +28,7 @@ export default function ActivationsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Activation | null>(null);
   const [filterLicense, setFilterLicense] = useState<string>('all');
   const [search, setSearch] = useState('');
-  const [form, setForm] = useState({ grantId: '', deviceName: '', deviceFingerprint: '', ipAddress: '' });
+  const [form, setForm] = useState({ grantId: '', deviceName: '', deviceFingerprint: '', ipAddress: '', systemId: '', installationType: 'standalone' as const, productFamily: '', productVersion: '', activationType: 'online' as const, interval: 30 });
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -48,7 +48,7 @@ export default function ActivationsPage() {
   });
 
   const openCreate = () => {
-    setForm({ grantId: grants[0]?.id || '', deviceName: '', deviceFingerprint: '', ipAddress: '' });
+    setForm({ grantId: grants[0]?.id || '', deviceName: '', deviceFingerprint: '', ipAddress: '', systemId: '', installationType: 'standalone', productFamily: '', productVersion: '', activationType: 'online', interval: 30 });
     setDialogOpen(true);
   };
 
@@ -56,7 +56,18 @@ export default function ActivationsPage() {
     if (!form.grantId || !form.deviceName.trim()) { toast.error('Grant and device name are required'); return; }
     const grant = grants.find(g => g.id === form.grantId);
     const ts = new Date().toISOString();
-    store.createActivation({ ...form, licenseId: grant?.licenseId || '', activatedAt: ts, lastSeenAt: ts, isActive: true });
+    const product = grant ? products.find(p => licenses.find(l => l.id === grant.licenseId)?.productId === p.id) : null;
+    store.createActivation({
+      ...form,
+      licenseId: grant?.licenseId || '',
+      systemId: form.systemId || `SYS-${Date.now()}`,
+      productFamily: form.productFamily || product?.name || '',
+      activatedAt: ts,
+      lastActivationCall: ts,
+      lastProductActivationState: 'activated',
+      lastSeenAt: ts,
+      isActive: true,
+    });
     toast.success('Activation created');
     setDialogOpen(false);
   };
