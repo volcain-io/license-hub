@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Copy, Power, PowerOff, Trash2, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter } from 'lucide-react';
+import { ArrowLeft, Copy, ShieldCheck, ShieldBan, Trash2, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -92,7 +92,7 @@ export default function LicenseDetailPage() {
   const copyKey = () => { navigator.clipboard.writeText(license.licenseKey); toast.success('Key copied'); };
   const toggleActive = (a: Activation) => {
     store.updateActivation(a.id, { isActive: !a.isActive });
-    toast.success(a.isActive ? 'Deactivated' : 'Reactivated');
+    toast.success(a.isActive ? 'Denied' : 'Allowed');
   };
   const handleDeleteActivation = () => {
     if (deleteTarget) { store.deleteActivation(deleteTarget.id); toast.success('Activation removed'); }
@@ -256,15 +256,15 @@ export default function LicenseDetailPage() {
                           <span className="text-xs ml-1">({formatDistanceToNow(new Date(a.lastSeenAt), { addSuffix: true })})</span>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className={cn('text-xs', a.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-muted text-muted-foreground')}>
-                            {a.isActive ? 'Active' : 'Inactive'}
+                          <Badge variant="outline" className={cn('text-xs', a.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-destructive/15 text-destructive border-destructive/30')}>
+                            {a.isActive ? 'Allowed' : 'Denied'}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" asChild><Link to={`/activations/${a.id}`}><Eye className="h-4 w-4" /></Link></Button>
-                            <Button variant="ghost" size="icon" onClick={() => toggleActive(a)} title={a.isActive ? 'Deactivate' : 'Reactivate'}>
-                              {a.isActive ? <PowerOff className="h-4 w-4 text-warning" /> : <Power className="h-4 w-4 text-success" />}
+                            <Button variant="ghost" size="icon" onClick={() => toggleActive(a)} title={a.isActive ? 'Deny' : 'Allow'}>
+                              {a.isActive ? <ShieldBan className="h-4 w-4 text-destructive" /> : <ShieldCheck className="h-4 w-4 text-success" />}
                             </Button>
                             <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(a)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                           </div>
