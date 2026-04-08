@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Copy, ShieldCheck, ShieldBan, Trash2, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter } from 'lucide-react';
+import { ArrowLeft, Copy, ShieldCheck, ShieldBan, Trash2, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter, Power, PowerOff, Plus, Fingerprint } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -91,7 +91,7 @@ export default function LicenseDetailPage() {
   const selectedGrant = licenseGrants.find(g => g.id === selectedGrantId);
   const filteredAuditLog = selectedGrantId === 'all'
     ? auditLog
-    : auditLog.filter(e => e.details.toLowerCase().includes(selectedGrantId.toLowerCase()) || e.details.toLowerCase().includes(selectedGrant?.featureCode?.toLowerCase() || '___'));
+    : auditLog.filter(e => e.details.toLowerCase().includes(selectedGrantId.toLowerCase()) || e.details.toLowerCase().includes(selectedGrant?.name?.toLowerCase() || '___'));
 
   const copyKey = () => { navigator.clipboard.writeText(license.licenseKey); toast.success('Key copied'); };
   const toggleActive = (a: Activation) => {
@@ -160,47 +160,78 @@ export default function LicenseDetailPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Feature Code</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Activations</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Identity</TableHead>
+                <TableHead>Usage</TableHead>
+                <TableHead>State</TableHead>
+                <TableHead>License Key</TableHead>
                 <TableHead>Period</TableHead>
-                <TableHead className="w-16" />
+                <TableHead className="w-48" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {licenseGrants.map(g => {
-                const grantActivations = activations.filter(a => a.grantId === g.id);
-                const grantActiveCount = grantActivations.filter(a => a.isActive).length;
-                return (
-                  <TableRow
-                    key={g.id}
-                    className={cn('cursor-pointer', selectedGrantId === g.id && 'bg-accent')}
-                    onClick={() => setSelectedGrantId(prev => prev === g.id ? 'all' : g.id)}
-                  >
-                    <TableCell className="font-medium text-sm">
-                      <div className="flex items-center gap-2">
-                        {selectedGrantId === g.id && <Filter className="h-3 w-3 text-primary" />}
-                        {g.name}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{g.featureCode}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn('text-xs', grantStatusColor[g.status] || '')}>
-                        {g.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{grantActiveCount} / {g.maxActivations}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {format(new Date(g.startsAt), 'MMM d, yyyy')} → {g.expiresAt ? format(new Date(g.expiresAt), 'MMM d, yyyy') : '∞'}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); setDeleteGrantTarget(g); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {licenseGrants.map(g => (
+                <TableRow
+                  key={g.id}
+                  className={cn('cursor-pointer', selectedGrantId === g.id && 'bg-accent')}
+                  onClick={() => setSelectedGrantId(prev => prev === g.id ? 'all' : g.id)}
+                >
+                  <TableCell className="font-medium text-sm">
+                    <div className="flex items-center gap-2">
+                      {selectedGrantId === g.id && <Filter className="h-3 w-3 text-primary" />}
+                      {g.name}
+                    </div>
+                  </TableCell>
+                  <TableCell><Badge variant="secondary" className="text-xs">{g.grantType === 'main_license' ? 'Main License' : 'Sublicense'}</Badge></TableCell>
+                  <TableCell><Badge variant="outline" className="text-xs capitalize">{g.grantIdentity}</Badge></TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={cn('text-xs', grantUsageColor[g.usageStatus] || '')}>
+                      {g.usageStatus === 'usable' ? 'Usable' : 'Unusable'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={cn('text-xs', grantStateColor[g.grantState] || '')}>
+                      {g.grantState === 'active' ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{g.licenseKey}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {format(new Date(g.startDate), 'MMM d, yyyy')} → {g.endDate ? format(new Date(g.endDate), 'MMM d, yyyy') : '∞'}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" title={g.grantState === 'active' ? 'Deactivate' : 'Activate'} onClick={() => {
+                        store.updateGrant(g.id, { grantState: g.grantState === 'active' ? 'inactive' : 'active' });
+                        toast.success(g.grantState === 'active' ? 'Grant deactivated' : 'Grant activated');
+                      }}>
+                        {g.grantState === 'active' ? <PowerOff className="h-4 w-4 text-destructive" /> : <Power className="h-4 w-4 text-success" />}
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Add Sublicense" onClick={() => {
+                        store.createGrant({ licenseId: g.licenseId, usageStatus: 'usable', licenseKey: g.licenseKey, name: `${g.name} - Sublicense`, grantType: 'sublicense', grantIdentity: g.grantIdentity, grantState: 'active', startDate: new Date().toISOString(), endDate: g.endDate });
+                        toast.success('Sublicense added');
+                      }}>
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Manually Activate" onClick={() => {
+                        store.updateGrant(g.id, { grantState: 'active', usageStatus: 'usable' });
+                        toast.success('Grant manually activated');
+                      }}>
+                        <Fingerprint className="h-4 w-4 text-primary" />
+                      </Button>
+                      {/* Developer-only actions */}
+                      <Button variant="ghost" size="icon" title="Copy Grant ID (Dev)" onClick={() => { navigator.clipboard.writeText(g.id); toast.success('Grant ID copied'); }}>
+                        <Copy className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                      <Button variant="ghost" size="icon" title="Copy License ID (Dev)" onClick={() => { navigator.clipboard.writeText(g.licenseId); toast.success('License ID copied'); }}>
+                        <Key className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => setDeleteGrantTarget(g)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
               {licenseGrants.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No grants</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No grants</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
