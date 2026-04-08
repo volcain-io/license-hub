@@ -81,7 +81,7 @@ export default function ActivationsPage() {
 
   const grantLabel = (grantId: string) => {
     const g = grants.find(gr => gr.id === grantId);
-    return g ? `${g.name} (${g.featureCode})` : 'Unknown';
+    return g ? `${g.name} (${g.grantType === 'main_license' ? 'Main' : 'Sub'})` : 'Unknown';
   };
 
   const licenseLabel = (id: string) => {
