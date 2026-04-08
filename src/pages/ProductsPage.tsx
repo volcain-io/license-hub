@@ -5,7 +5,7 @@ import { useDebounce } from '@/hooks/use-debounce';
 import * as store from '@/lib/store';
 import type { Product } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
-import ConfirmDialog from '@/components/ConfirmDialog';
+
 import TablePagination from '@/components/TablePagination';
 import SortableHeader from '@/components/SortableHeader';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -23,7 +23,7 @@ export default function ProductsPage() {
   const { products, licenses } = useStoreData();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  
   const [search, setSearch] = useState('');
   const [form, setForm] = useState({ name: '', slug: '', description: '' });
 
@@ -56,10 +56,6 @@ export default function ProductsPage() {
     setDialogOpen(false);
   };
 
-  const handleDelete = () => {
-    if (deleteTarget) { store.deleteProduct(deleteTarget.id); toast.success('Product deleted'); }
-    setDeleteTarget(null);
-  };
 
   return (
     <>
@@ -93,7 +89,6 @@ export default function ProductsPage() {
                   <TableCell>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(p)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -119,7 +114,7 @@ export default function ProductsPage() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete Product" description={`Delete "${deleteTarget?.name}"? This cannot be undone.`} onConfirm={handleDelete} />
+      
     </>
   );
 }

@@ -7,7 +7,7 @@ import * as store from '@/lib/store';
 import type { License, LicenseStatus } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
 import StatusBadge from '@/components/StatusBadge';
-import ConfirmDialog from '@/components/ConfirmDialog';
+
 import TablePagination from '@/components/TablePagination';
 import SortableHeader from '@/components/SortableHeader';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Copy } from 'lucide-react';
+import { Plus, Pencil, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -29,7 +29,7 @@ export default function LicensesPage() {
   const { products, licenses, activations } = useStoreData();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<License | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<License | null>(null);
+  
   const [filterProduct, setFilterProduct] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [search, setSearch] = useState('');
@@ -81,7 +81,7 @@ export default function LicensesPage() {
     setDialogOpen(false);
   };
 
-  const handleDelete = () => { if (deleteTarget) { store.deleteLicense(deleteTarget.id); toast.success('License deleted'); } setDeleteTarget(null); };
+  
   const copyKey = (key: string) => { navigator.clipboard.writeText(key); toast.success('Key copied'); };
   const productName = (id: string) => products.find(p => p.id === id)?.name || 'Unknown';
 
@@ -146,10 +146,9 @@ export default function LicensesPage() {
                     <TableCell className="text-sm">{usedActivations}/{l.maxActivations}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{l.expiresAt ? format(new Date(l.expiresAt), 'MMM d, yyyy') : '∞'}</TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => openEdit(l)}><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(l)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                      </div>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(l)}><Pencil className="h-4 w-4" /></Button>
+                    </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -199,7 +198,7 @@ export default function LicensesPage() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Delete License" description={`Delete license "${deleteTarget?.licenseKey}"? This cannot be undone.`} onConfirm={handleDelete} />
+      
     </>
   );
 }

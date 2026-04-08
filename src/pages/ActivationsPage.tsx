@@ -6,7 +6,7 @@ import { useDebounce } from '@/hooks/use-debounce';
 import * as store from '@/lib/store';
 import type { Activation } from '@/lib/types';
 import PageHeader from '@/components/PageHeader';
-import ConfirmDialog from '@/components/ConfirmDialog';
+
 import TablePagination from '@/components/TablePagination';
 import SortableHeader from '@/components/SortableHeader';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Trash2, ShieldCheck, ShieldBan, Eye, Copy } from 'lucide-react';
+import { Plus, ShieldCheck, ShieldBan, Eye, Copy } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 export default function ActivationsPage() {
   const { licenses, activations, products, grants } = useStoreData();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<Activation | null>(null);
+  
   const [filterLicense, setFilterLicense] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [form, setForm] = useState({ grantId: '', deviceName: '', deviceFingerprint: '', ipAddress: '', systemId: '', installationType: 'standalone' as const, productFamily: '', productVersion: '', activationType: 'online' as const, interval: 30 });
@@ -77,7 +77,7 @@ export default function ActivationsPage() {
     toast.success(a.isActive ? 'Denied' : 'Allowed');
   };
 
-  const handleDelete = () => { if (deleteTarget) { store.deleteActivation(deleteTarget.id); toast.success('Activation removed'); } setDeleteTarget(null); };
+  
 
   const grantLabel = (grantId: string) => {
     const g = grants.find(gr => gr.id === grantId);
@@ -167,7 +167,7 @@ export default function ActivationsPage() {
                       <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(a.systemId); toast.success('System ID copied'); }} title="Copy System ID">
                         <Copy className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(a)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      
                     </div>
                   </TableCell>
                 </TableRow>
@@ -228,7 +228,7 @@ export default function ActivationsPage() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Remove Activation" description={`Remove activation for "${deleteTarget?.deviceName}"?`} onConfirm={handleDelete} />
+      
     </>
   );
 }

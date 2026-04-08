@@ -4,7 +4,7 @@ import * as store from '@/lib/store';
 import { getAuditLogsByLicense } from '@/lib/audit-store';
 import PageHeader from '@/components/PageHeader';
 import StatusBadge from '@/components/StatusBadge';
-import ConfirmDialog from '@/components/ConfirmDialog';
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Copy, ShieldCheck, ShieldBan, Trash2, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter, Power, PowerOff, Plus, Fingerprint } from 'lucide-react';
+import { ArrowLeft, Copy, ShieldCheck, ShieldBan, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter, Power, PowerOff, Plus, Fingerprint } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -53,8 +53,6 @@ const stateColors: Record<string, string> = {
 export default function LicenseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { products, licenses, grants, activations, responseLogs, historyLogs } = useStoreData();
-  const [deleteTarget, setDeleteTarget] = useState<Activation | null>(null);
-  const [deleteGrantTarget, setDeleteGrantTarget] = useState<GrantType | null>(null);
   const [selectedGrantId, setSelectedGrantId] = useState<string>('all');
 
   const license = licenses.find(l => l.id === id);
@@ -97,14 +95,6 @@ export default function LicenseDetailPage() {
   const toggleActive = (a: Activation) => {
     store.updateActivation(a.id, { isActive: !a.isActive });
     toast.success(a.isActive ? 'Denied' : 'Allowed');
-  };
-  const handleDeleteActivation = () => {
-    if (deleteTarget) { store.deleteActivation(deleteTarget.id); toast.success('Activation removed'); }
-    setDeleteTarget(null);
-  };
-  const handleDeleteGrant = () => {
-    if (deleteGrantTarget) { store.deleteGrant(deleteGrantTarget.id); toast.success('Grant removed'); }
-    setDeleteGrantTarget(null);
   };
 
   return (
@@ -225,7 +215,7 @@ export default function LicenseDetailPage() {
                       <Button variant="ghost" size="icon" title="Copy License ID (Dev)" onClick={() => { navigator.clipboard.writeText(g.licenseId); toast.success('License ID copied'); }}>
                         <Key className="h-4 w-4 text-muted-foreground" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => setDeleteGrantTarget(g)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      
                     </div>
                   </TableCell>
                 </TableRow>
@@ -313,7 +303,7 @@ export default function LicenseDetailPage() {
                             <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(a.systemId); toast.success('System ID copied'); }} title="Copy System ID">
                               <Copy className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(a)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                            
                           </div>
                         </TableCell>
                       </TableRow>
@@ -436,8 +426,6 @@ export default function LicenseDetailPage() {
         </TabsContent>
       </Tabs>
 
-      <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title="Remove Activation" description={`Remove activation for "${deleteTarget?.deviceName}"?`} onConfirm={handleDeleteActivation} />
-      <ConfirmDialog open={!!deleteGrantTarget} onOpenChange={() => setDeleteGrantTarget(null)} title="Remove Grant" description={`Remove grant "${deleteGrantTarget?.name}"? All associated activations will be orphaned.`} onConfirm={handleDeleteGrant} />
     </>
   );
 }
