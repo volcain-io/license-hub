@@ -7,7 +7,7 @@ export default function DashboardPage() {
   const { products, licenses, grants, activations } = useStoreData();
   const activeLicenses = licenses.filter(l => l.status === 'active').length;
   const expiredLicenses = licenses.filter(l => l.status === 'expired' || l.status === 'suspended').length;
-  const activeGrants = grants.filter(g => g.status === 'active').length;
+  const activeGrants = grants.filter(g => g.grantState === 'active').length;
   const activeActivations = activations.filter(a => a.isActive).length;
 
   const stats = [
