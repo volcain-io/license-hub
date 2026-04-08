@@ -25,10 +25,14 @@ const actionIcons: Record<string, string> = {
   'activation.added': '📱', 'activation.deactivated': '📴', 'activation.removed': '🗑️',
 };
 
-const grantStatusColor: Record<string, string> = {
+const grantStateColor: Record<string, string> = {
   active: 'bg-success/15 text-success border-success/30',
-  expired: 'bg-muted text-muted-foreground',
-  revoked: 'bg-destructive/15 text-destructive border-destructive/30',
+  inactive: 'bg-muted text-muted-foreground',
+};
+
+const grantUsageColor: Record<string, string> = {
+  usable: 'bg-success/15 text-success border-success/30',
+  unusable: 'bg-destructive/15 text-destructive border-destructive/30',
 };
 
 const resultColors: Record<string, string> = {
