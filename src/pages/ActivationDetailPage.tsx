@@ -115,7 +115,8 @@ export default function ActivationDetailPage() {
           <CardHeader className="pb-3"><CardTitle className="text-sm font-medium text-muted-foreground">Grant & License</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             <InfoRow icon={Shield} label="Grant">{grant?.name || 'Unknown'}</InfoRow>
-            <InfoRow icon={FileText} label="Feature"><span className="font-mono text-xs">{grant?.featureCode || '—'}</span></InfoRow>
+            <InfoRow icon={FileText} label="Type"><Badge variant="secondary" className="text-xs">{grant?.grantType === 'main_license' ? 'Main License' : 'Sublicense'}</Badge></InfoRow>
+            <InfoRow icon={FileText} label="Identity"><Badge variant="secondary" className="text-xs">{grant?.grantIdentity || '—'}</Badge></InfoRow>
             <InfoRow icon={FileText} label="License">
               {license ? <Link to={`/licenses/${license.id}`} className="text-primary hover:underline text-xs font-mono">{license.licenseKey}</Link> : 'Unknown'}
             </InfoRow>

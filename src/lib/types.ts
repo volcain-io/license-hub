@@ -23,18 +23,22 @@ export interface License {
   updatedAt: string;
 }
 
-export type GrantStatus = 'active' | 'expired' | 'revoked';
+export type GrantUsageStatus = 'usable' | 'unusable';
+export type GrantType = 'main_license' | 'sublicense';
+export type GrantIdentity = 'test' | 'commercial';
+export type GrantState = 'active' | 'inactive';
 
 export interface Grant {
   id: string;
   licenseId: string;
+  usageStatus: GrantUsageStatus;
+  licenseKey: string;
   name: string;
-  featureCode: string;
-  status: GrantStatus;
-  maxActivations: number;
-  startsAt: string;
-  expiresAt: string | null;
-  metadata: string;
+  grantType: GrantType;
+  grantIdentity: GrantIdentity;
+  grantState: GrantState;
+  startDate: string;
+  endDate: string | null;
   createdAt: string;
   updatedAt: string;
 }
