@@ -33,6 +33,7 @@ const stateColors: Record<string, string> = {
 export default function ActivationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { activations, grants, licenses, products, responseLogs, historyLogs } = useStoreData();
+  const { devMode } = useDevMode();
 
   const activation = activations.find(a => a.id === id);
   if (!activation) {
@@ -68,12 +69,14 @@ export default function ActivationDetailPage() {
             <Button variant="outline" size="sm" onClick={() => { store.updateActivation(activation.id, { isActive: !activation.isActive }); toast.success(activation.isActive ? 'Denied' : 'Allowed'); }}>
               {activation.isActive ? <><ShieldBan className="h-4 w-4 mr-1" /> Deny</> : <><ShieldCheck className="h-4 w-4 mr-1" /> Allow</>}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(activation.systemId); toast.success('System ID copied'); }}>
-              <Copy className="h-4 w-4 mr-1" /> Copy System ID
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(`DEV-${activation.systemId}-${activation.deviceFingerprint}`); toast.success('Developer Info System ID copied'); }}>
-              <Copy className="h-4 w-4 mr-1" /> Copy Dev Info ID
-            </Button>
+            {devMode && <>
+              <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(activation.systemId); toast.success('System ID copied'); }}>
+                <Copy className="h-4 w-4 mr-1" /> Copy System ID
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(`DEV-${activation.systemId}-${activation.deviceFingerprint}`); toast.success('Developer Info System ID copied'); }}>
+                <Copy className="h-4 w-4 mr-1" /> Copy Dev Info ID
+              </Button>
+            </>}
             <Badge variant="outline" className={cn('text-xs', activation.isActive ? 'bg-success/15 text-success border-success/30' : 'bg-destructive/15 text-destructive border-destructive/30')}>
               {activation.isActive ? 'Allowed' : 'Denied'}
             </Badge>
