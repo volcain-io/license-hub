@@ -116,7 +116,7 @@ export default function LicenseDetailPage() {
           <CardContent className="space-y-3">
             <InfoRow icon={Key} label="License Key">
               <span className="font-mono text-xs">{license.licenseKey}</span>
-              {devMode && <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={copyKey}><Copy className="h-3 w-3" /></Button>}
+              <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={copyKey}><Copy className="h-3 w-3" /></Button>
             </InfoRow>
             <InfoRow icon={Package} label="Product">{product?.name || 'Unknown'}</InfoRow>
             <InfoRow icon={User} label="Customer">{license.customerName}</InfoRow>
