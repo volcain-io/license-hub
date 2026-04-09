@@ -54,6 +54,7 @@ const stateColors: Record<string, string> = {
 export default function LicenseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { products, licenses, grants, activations, responseLogs, historyLogs } = useStoreData();
+  const { devMode } = useDevMode();
   const [selectedGrantId, setSelectedGrantId] = useState<string>('all');
 
   const license = licenses.find(l => l.id === id);
