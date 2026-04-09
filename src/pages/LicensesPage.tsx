@@ -28,6 +28,7 @@ const defaultForm = { licenseKey: '', productId: '', customerName: '', customerE
 
 export default function LicensesPage() {
   const { products, licenses, activations } = useStoreData();
+  const { devMode } = useDevMode();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<License | null>(null);
   

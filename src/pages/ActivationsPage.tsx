@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 
 export default function ActivationsPage() {
   const { licenses, activations, products, grants } = useStoreData();
+  const { devMode } = useDevMode();
   const [dialogOpen, setDialogOpen] = useState(false);
   
   const [filterLicense, setFilterLicense] = useState<string>('all');
