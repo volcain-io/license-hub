@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Package, Key, Monitor, LayoutDashboard, Shield } from 'lucide-react';
+import { Package, Key, Monitor, LayoutDashboard, Code } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useDevMode } from '@/contexts/DevModeContext';
+import { Switch } from '@/components/ui/switch';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -11,6 +13,7 @@ const navItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
+  const { devMode, toggleDevMode } = useDevMode();
 
   return (
     <aside className="w-60 min-h-screen bg-sidebar text-sidebar-foreground flex flex-col border-r border-sidebar-border">
@@ -41,8 +44,13 @@ export default function AppSidebar() {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-sidebar-border text-xs text-sidebar-foreground/50">
-        v1.0 — Prototype
+      <div className="p-4 border-t border-sidebar-border space-y-3">
+        <label className="flex items-center gap-2 cursor-pointer text-sm text-sidebar-foreground/70">
+          <Code className="h-4 w-4" />
+          <span className="flex-1">Dev Mode</span>
+          <Switch checked={devMode} onCheckedChange={toggleDevMode} />
+        </label>
+        <div className="text-xs text-sidebar-foreground/50">v1.0 — Prototype</div>
       </div>
     </aside>
   );

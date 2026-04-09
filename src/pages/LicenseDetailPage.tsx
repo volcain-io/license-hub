@@ -17,6 +17,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useState, useMemo } from 'react';
+import { useDevMode } from '@/contexts/DevModeContext';
 import type { Activation, Grant as GrantType } from '@/lib/types';
 
 const actionIcons: Record<string, string> = {
@@ -53,6 +54,7 @@ const stateColors: Record<string, string> = {
 export default function LicenseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { products, licenses, grants, activations, responseLogs, historyLogs } = useStoreData();
+  const { devMode } = useDevMode();
   const [selectedGrantId, setSelectedGrantId] = useState<string>('all');
 
   const license = licenses.find(l => l.id === id);
@@ -114,7 +116,7 @@ export default function LicenseDetailPage() {
           <CardContent className="space-y-3">
             <InfoRow icon={Key} label="License Key">
               <span className="font-mono text-xs">{license.licenseKey}</span>
-              <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={copyKey}><Copy className="h-3 w-3" /></Button>
+              {devMode && <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={copyKey}><Copy className="h-3 w-3" /></Button>}
             </InfoRow>
             <InfoRow icon={Package} label="Product">{product?.name || 'Unknown'}</InfoRow>
             <InfoRow icon={User} label="Customer">{license.customerName}</InfoRow>
@@ -228,12 +230,14 @@ export default function LicenseDetailPage() {
                         <Fingerprint className="h-4 w-4 text-primary" />
                       </Button>
                       {/* Developer-only actions */}
-                      <Button variant="ghost" size="icon" title="Copy Grant ID (Dev)" onClick={() => { navigator.clipboard.writeText(g.id); toast.success('Grant ID copied'); }}>
-                        <Copy className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                      <Button variant="ghost" size="icon" title="Copy License ID (Dev)" onClick={() => { navigator.clipboard.writeText(g.licenseId); toast.success('License ID copied'); }}>
-                        <Key className="h-4 w-4 text-muted-foreground" />
-                      </Button>
+                      {devMode && <>
+                        <Button variant="ghost" size="icon" title="Copy Grant ID (Dev)" onClick={() => { navigator.clipboard.writeText(g.id); toast.success('Grant ID copied'); }}>
+                          <Copy className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                        <Button variant="ghost" size="icon" title="Copy License ID (Dev)" onClick={() => { navigator.clipboard.writeText(g.licenseId); toast.success('License ID copied'); }}>
+                          <Key className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      </>}
                       
                     </div>
                   </TableCell>
@@ -319,9 +323,9 @@ export default function LicenseDetailPage() {
                             <Button variant="ghost" size="icon" onClick={() => toggleActive(a)} title={a.isActive ? 'Deny' : 'Allow'}>
                               {a.isActive ? <ShieldBan className="h-4 w-4 text-destructive" /> : <ShieldCheck className="h-4 w-4 text-success" />}
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(a.systemId); toast.success('System ID copied'); }} title="Copy System ID">
+                            {devMode && <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(a.systemId); toast.success('System ID copied'); }} title="Copy System ID">
                               <Copy className="h-4 w-4" />
-                            </Button>
+                            </Button>}
                             
                           </div>
                         </TableCell>
