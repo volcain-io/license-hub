@@ -136,7 +136,7 @@ export default function LicensesPage() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Link to={`/licenses/${l.id}`} className="font-mono text-xs text-primary hover:underline">{l.licenseKey}</Link>
-                        {devMode && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyKey(l.licenseKey)}><Copy className="h-3 w-3" /></Button>}
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyKey(l.licenseKey)}><Copy className="h-3 w-3" /></Button>
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{productName(l.productId)}</TableCell>
