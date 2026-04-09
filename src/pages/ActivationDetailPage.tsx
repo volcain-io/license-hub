@@ -13,6 +13,7 @@ import { ArrowLeft, Monitor, Shield, Clock, Globe, Hash, FileText, ShieldCheck, 
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useDevMode } from '@/contexts/DevModeContext';
 
 const resultColors: Record<string, string> = {
   approved: 'bg-success/15 text-success border-success/30',
