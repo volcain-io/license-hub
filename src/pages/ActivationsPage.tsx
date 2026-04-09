@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useDevMode } from '@/contexts/DevModeContext';
 import { Link } from 'react-router-dom';
 import { useStoreData } from '@/hooks/use-store-sync';
 import { usePagination } from '@/hooks/use-pagination';
@@ -164,9 +165,9 @@ export default function ActivationsPage() {
                       <Button variant="ghost" size="icon" onClick={() => toggleActive(a)} title={a.isActive ? 'Deny' : 'Allow'}>
                         {a.isActive ? <ShieldBan className="h-4 w-4 text-destructive" /> : <ShieldCheck className="h-4 w-4 text-success" />}
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(a.systemId); toast.success('System ID copied'); }} title="Copy System ID">
+                      {devMode && <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(a.systemId); toast.success('System ID copied'); }} title="Copy System ID">
                         <Copy className="h-4 w-4" />
-                      </Button>
+                      </Button>}
                       
                     </div>
                   </TableCell>

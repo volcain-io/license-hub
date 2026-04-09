@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useDevMode } from '@/contexts/DevModeContext';
 import { Link } from 'react-router-dom';
 import { useStoreData } from '@/hooks/use-store-sync';
 import { usePagination } from '@/hooks/use-pagination';
@@ -134,7 +135,7 @@ export default function LicensesPage() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Link to={`/licenses/${l.id}`} className="font-mono text-xs text-primary hover:underline">{l.licenseKey}</Link>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyKey(l.licenseKey)}><Copy className="h-3 w-3" /></Button>
+                        {devMode && <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => copyKey(l.licenseKey)}><Copy className="h-3 w-3" /></Button>}
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">{productName(l.productId)}</TableCell>
