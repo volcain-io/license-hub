@@ -143,7 +143,26 @@ export default function LicenseDetailPage() {
       </div>
 
       {/* Grants */}
-      <h2 className="text-lg font-semibold mb-3">Grants ({licenseGrants.length})</h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold">Grants ({licenseGrants.length})</h2>
+        {licenseGrants.some(g => g.grantState === 'active') && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              licenseGrants.forEach(g => {
+                if (g.grantState === 'active') {
+                  store.updateGrant(g.id, { grantState: 'inactive' });
+                }
+              });
+              toast.success(`All active grants deactivated`);
+            }}
+          >
+            <PowerOff className="h-4 w-4 mr-1" />
+            Deactivate All Grants
+          </Button>
+        )}
+      </div>
       <Card className="mb-6">
         <CardContent className="p-0">
           <Table>
