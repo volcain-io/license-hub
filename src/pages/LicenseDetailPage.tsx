@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Copy, ShieldCheck, ShieldBan, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter, Power, PowerOff, Plus, Fingerprint } from 'lucide-react';
+import { ArrowLeft, Copy, ShieldCheck, ShieldBan, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter, Power, PowerOff, Plus, Pencil, Fingerprint } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
