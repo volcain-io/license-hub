@@ -217,12 +217,21 @@ export default function LicenseDetailPage() {
                       }}>
                         {g.grantState === 'active' ? <PowerOff className="h-4 w-4 text-destructive" /> : <Power className="h-4 w-4 text-success" />}
                       </Button>
-                      <Button variant="ghost" size="icon" title="Add Sublicense" onClick={() => {
-                        store.createGrant({ licenseId: g.licenseId, usageStatus: 'usable', licenseKey: g.licenseKey, name: `${g.name} - Sublicense`, grantType: 'sublicense', grantIdentity: g.grantIdentity, grantState: 'active', startDate: new Date().toISOString(), endDate: g.endDate });
-                        toast.success('Sublicense added');
-                      }}>
-                        <Plus className="h-4 w-4" />
-                      </Button>
+                      {g.grantType === 'main_license' && (
+                        <Button variant="ghost" size="icon" title="Add Sublicense" onClick={() => {
+                          store.createGrant({ licenseId: g.licenseId, usageStatus: 'usable', licenseKey: g.licenseKey, name: `${g.name} - Sublicense`, grantType: 'sublicense', grantIdentity: g.grantIdentity, grantState: 'active', startDate: new Date().toISOString(), endDate: g.endDate });
+                          toast.success('Sublicense added');
+                        }}>
+                          <Plus className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {g.grantType === 'sublicense' && (
+                        <Button variant="ghost" size="icon" title="Edit Sublicense" onClick={() => {
+                          toast.info('Edit sublicense');
+                        }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" title="Manually Activate" onClick={() => {
                         store.updateGrant(g.id, { grantState: 'active', usageStatus: 'usable' });
                         toast.success('Grant manually activated');
