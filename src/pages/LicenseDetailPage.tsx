@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Copy, ShieldCheck, ShieldBan, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter, Power, PowerOff, Plus, Pencil, Fingerprint } from 'lucide-react';
+import { ArrowLeft, Copy, Lock, Unlock, Eye, User, Mail, Package, Key, Clock, Hash, FileText, Shield, Filter, Power, CirclePower, SquarePlus, Pencil, FileKey2, ShieldAlert } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -160,7 +160,7 @@ export default function LicenseDetailPage() {
               toast.success(`All active grants deactivated`);
             }}
           >
-            <PowerOff className="h-4 w-4 mr-1" />
+            <ShieldAlert className="h-4 w-4 mr-1" />
             Deactivate All Grants
           </Button>
         )}
@@ -215,14 +215,14 @@ export default function LicenseDetailPage() {
                         store.updateGrant(g.id, { grantState: g.grantState === 'active' ? 'inactive' : 'active' });
                         toast.success(g.grantState === 'active' ? 'Grant deactivated' : 'Grant activated');
                       }}>
-                        {g.grantState === 'active' ? <PowerOff className="h-4 w-4 text-destructive" /> : <Power className="h-4 w-4 text-success" />}
+                        {g.grantState === 'active' ? <CirclePower className="h-4 w-4 text-destructive" /> : <Power className="h-4 w-4 text-success" />}
                       </Button>
                       {g.grantType === 'main_license' && (
                         <Button variant="ghost" size="icon" title="Add Sublicense" onClick={() => {
                           store.createGrant({ licenseId: g.licenseId, usageStatus: 'usable', licenseKey: g.licenseKey, name: `${g.name} - Sublicense`, grantType: 'sublicense', grantIdentity: g.grantIdentity, grantState: 'active', startDate: new Date().toISOString(), endDate: g.endDate });
                           toast.success('Sublicense added');
                         }}>
-                          <Plus className="h-4 w-4" />
+                          <SquarePlus className="h-4 w-4" />
                         </Button>
                       )}
                       {g.grantType === 'sublicense' && (
@@ -236,7 +236,7 @@ export default function LicenseDetailPage() {
                         store.updateGrant(g.id, { grantState: 'active', usageStatus: 'usable' });
                         toast.success('Grant manually activated');
                       }}>
-                        <Fingerprint className="h-4 w-4 text-primary" />
+                        <FileKey2 className="h-4 w-4 text-primary" />
                       </Button>
                       {/* Developer-only actions */}
                       {devMode && <>
@@ -330,7 +330,7 @@ export default function LicenseDetailPage() {
                           <div className="flex gap-1">
                             <Button variant="ghost" size="icon" asChild><Link to={`/activations/${a.id}`}><Eye className="h-4 w-4" /></Link></Button>
                             <Button variant="ghost" size="icon" onClick={() => toggleActive(a)} title={a.isActive ? 'Deny' : 'Allow'}>
-                              {a.isActive ? <ShieldBan className="h-4 w-4 text-destructive" /> : <ShieldCheck className="h-4 w-4 text-success" />}
+                              {a.isActive ? <Lock className="h-4 w-4 text-destructive" /> : <Unlock className="h-4 w-4 text-success" />}
                             </Button>
                             {devMode && <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(a.systemId); toast.success('System ID copied'); }} title="Copy System ID">
                               <Copy className="h-4 w-4" />
