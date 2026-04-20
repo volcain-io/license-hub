@@ -121,6 +121,14 @@ export default function LicenseDetailPage() {
             <InfoRow icon={Package} label="Product">{product?.name || 'Unknown'}</InfoRow>
             <InfoRow icon={User} label="Customer">{license.customerName}</InfoRow>
             <InfoRow icon={Mail} label="Email">{license.customerEmail}</InfoRow>
+            {devMode && (
+              <InfoRow icon={Hash} label="Domain ID">
+                <span className="font-mono text-xs text-muted-foreground">{license.id}</span>
+                <Button variant="ghost" size="icon" className="h-6 w-6 ml-1" onClick={() => { navigator.clipboard.writeText(license.id); toast.success('Domain ID copied'); }}>
+                  <Copy className="h-3 w-3" />
+                </Button>
+              </InfoRow>
+            )}
           </CardContent>
         </Card>
 
